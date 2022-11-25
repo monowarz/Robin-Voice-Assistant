@@ -18,7 +18,7 @@ import wikipedia
 import random
 from time import strftime
 
-
+ print('Hey Monowar! You are a dumb. Learn about data security before exposing yourself in web')
 def RobinRensponse(audio):
     "speaks audio passed as argument"
     print(audio)
