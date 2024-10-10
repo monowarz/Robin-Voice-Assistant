@@ -1,39 +1,83 @@
-# Robin Voice Assistant
+# Robin - Personal Voice Assistant
 ![image](https://github.com/monowarz/Robin-Voice-Assistant/blob/master/Python%20Voice%20Assistant.png)
 
-## What is a Voice Assistant?
+# Robin - Personal Voice Assistant
 
-A voice assistant or intelligent personal assistant is a software agent that can perform tasks or services for an individual based on verbal commands i.e. by interpreting human speech and respond via synthesized voices. Users can ask their assistants’ questions, control home automation devices, and media playback via voice, and manage other basic tasks such as email, to-do lists, open or close any application etc with verbal commands.
+Robin is a Python-based voice assistant that helps automate everyday tasks. With voice commands, you can browse the web, send emails, get weather updates, play songs, and much more. 
 
+## Features
 
-Simple voice-based desktop/laptop assistant that has the capability to:
+- **Open websites**: Open Reddit subreddits, or any website just by saying its name.
+- **Send emails**: Compose and send emails through voice prompts.
+- **Weather updates**: Get current weather conditions for any city.
+- **Play music**: Play a song using VLC media player.
+- **News**: Get the top stories of the day from Google News.
+- **Change wallpaper**: Automatically change your desktop wallpaper with images from Unsplash.
+- **Tell a joke**: Hear random dad jokes for a quick laugh.
+- **Time updates**: Ask for the current time.
+- **Search Wikipedia**: Get summaries on topics directly from Wikipedia.
 
-1. Open the subreddit in the browser.
-2. Open any website in the browser.
-3. Send an email to your contacts.
-4. Launch any system application.
-5. Tells you the current weather and temperature of almost any city
-6. Tells you the current time.
-7. Greetings
-8. Play you a song on VLC media player(of course you need to have VLC media player installed in your laptop/desktop)
-9. Change desktop wallpaper.
-10. Tells you latest news feeds.
-11. Tells you about almost anything you ask.
+## Requirements
 
+To run Robin, you need the following Python packages:
 
-Supported commands :
+```bash
+pip install speechrecognition
+pip install pyowm
+pip install wikipedia
+pip install youtube_dl
+pip install vlc
+pip install bs4
+```
 
-1. Open reddit subreddit : Opens the subreddit in default browser.
-2. Open xyz.com : replace xyz with any website name
-3. Send email/email : Follow up questions such as recipient name, content will be asked in order.
-4. Tell a joke/another joke : Says a random dad joke.
-5. Current weather in {cityname} : Tells you the current condition and temperture
-7. Hello
-8. play me a video : Plays song in your VLC media player
-9. change wallpaper : Change desktop wallpaper
-10. news for today : reads top news of today
-11. time : Current system time
-12. top stories from google news (RSS feeds)
-13. tell me about xyz : tells you about xyz
+You’ll also need these dependencies:
+- [VLC media player](https://www.videolan.org/vlc/) for playing media files.
+- A microphone and speakers to interact with the assistant.
 
-You can contact with me [here](https://www.monowar.eu.org) for any query or for any collaboration project!
+## Setup and Usage
+
+1. Clone this repository:
+
+```bash
+git clone https://github.com/yourusername/robin-voice-assistant.git
+cd robin-voice-assistant
+```
+
+2. Install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the assistant:
+
+```bash
+python robin.py
+```
+
+4. Speak commands like:
+   - **"Open reddit"** to browse Reddit.
+   - **"Send email"** to compose an email.
+   - **"What's the weather in [city]"** for weather updates.
+   - **"Play me a song"** to play music through VLC.
+
+5. To see available commands, say **"Help me"**.
+
+## Commands
+
+- **Open a subreddit**: `Open Reddit [subreddit name]`
+- **Visit a website**: `Open [website name]`
+- **Send an email**: `Email [recipient name]`
+- **Tell me a joke**: `Tell a joke`
+- **Weather update**: `Current weather in [city]`
+- **Check the time**: `Time`
+- **Change wallpaper**: `Change wallpaper`
+- **Play a song**: `Play me a song`
+- **Today's news**: `News for today`
+- **Learn about something**: `Tell me about [topic]`
+
+## Contributions
+
+Contributions are welcome! Please open an issue or submit a pull request if you have any suggestions, improvements, or bug fixes.
+
+Enjoy automating your tasks with Robin!
