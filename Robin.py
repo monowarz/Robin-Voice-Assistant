@@ -1,33 +1,31 @@
 import speech_recognition as sr
-import os
-import sys
-import re
-import webbrowser
-import smtplib
-import requests
-import subprocess
 from pyowm import OWM
 import youtube_dl
 import vlc
 import urllib
 import urllib2
 import json
-from bs4 import BeautifulSoup as soup
-from urllib2 import urlopen
+import os
+import sys
+import re
 import wikipedia
 import random
+import webbrowser
+import smtplib
+import requests
+import subprocess
+from bs4 import BeautifulSoup as soup
+from urllib2 import urlopen
 from time import strftime
 
 
-def RobinRensponse(audio):
+def robinreply(audio):
     "speaks audio passed as argument"
     print(audio)
     for line in audio.splitlines():
         os.system("say " + audio)
 
-
-
-def myCommand():
+def usercom():
     "listens for commands"
     r = sr.Recognizer()
     with sr.Microphone() as source:
@@ -41,13 +39,10 @@ def myCommand():
     #loop back to continue to listen for commands if unrecognizable speech is received
     except sr.UnknownValueError:
         print('....')
-        command = myCommand();
+        command = usercom();
     return command
 
-
-
-
-def assistant(command):
+def robin_start(command):
     "if statements for executing commands"
 
     #open subreddit Reddit
@@ -58,13 +53,11 @@ def assistant(command):
             subreddit = reg_ex.group(1)
             url = url + 'r/' + subreddit
         webbrowser.open(url)
-        RobinRensponse('The Reddit content has been opened for you Sir.')
-
+        robinreply('The Reddit content has been opened for you Sir.')
 
     elif 'shutdown' in command:
-        RobinRensponse('Bye bye Sir. Have a nice day')
+        robinreply('Bye bye Sir. Have a nice day')
         sys.exit()
-
 
     #open website
     elif 'open' in command:
@@ -74,56 +67,38 @@ def assistant(command):
             print(domain)
             url = 'https://www.' + domain
             webbrowser.open(url)
-            RobinRensponse('The website you have requested has been opened for you Sir.')
+            robinreply('The website you have requested has been opened for you Sir.')
         else:
             pass
 
-
-
-    #greetings
     elif 'hello' in command:
         day_time = int(strftime('%H'))
         if day_time < 12:
-            RobinRensponse('Hello Sir. Good morning')
+            robinreply('Hello Sir. Good morning')
         elif 12 <= day_time < 18:
-            RobinRensponse('Hello Sir. Good afternoon')
+            robinreply('Hello Sir. Good afternoon')
         else:
-            RobinRensponse('Hello Sir. Good evening')
+            robinreply('Hello Sir. Good evening')
 
     elif 'help me' in command:
-        RobinRensponse("""
-        You can use these commands and I'll help you out:
+        robinreply("""
+        Here’s what I can help you with:
 
-        1. Open reddit subreddit : Opens the subreddit in default browser.
-        2. Open xyz.com : replace xyz with any website name
-        3. Send email/email : Follow up questions such as recipient name, content will be asked in order.
-        4. Tell a joke/another joke : Says a random dad joke.
-        5. Current weather in {cityname} : Tells you the current condition and temperture
-        7. Greetings
-        8. play me a video : Plays song in your VLC media player
-        9. change wallpaper : Change desktop wallpaper
-        10. news for today : reads top news of today
-        11. time : Current system time
-        12. top stories from google news (RSS feeds)
-        13. tell me about xyz : tells you about xyz
+        1. Browse a Reddit subreddit: Simply name the subreddit, and I’ll open it in your browser.
+        2. Visit a website (e.g., open xyz.com): Replace 'xyz' with the site you want to visit.
+        3. Send an email: I’ll ask for the recipient and message details step-by-step.
+        4. Want a joke? Say "Tell a joke" or "another joke," and I’ll give you a dad joke.
+        5. Get the weather forecast in {city name}: I’ll update you with the current weather and temperature for your city.
+        6. Say hello, and I’ll greet you depending on the time of day.
+        7. Play a song: I can play your requested video or song on VLC.
+        8. Update your wallpaper: Let me change your desktop wallpaper for you.
+        9. Today’s news: I’ll read out the latest headlines.
+        10. Check the time: I’ll tell you the current time from your system.
+        11. Top Google news stories: I’ll bring you the latest top stories from Google News.
+        12. Learn about something: Ask me to tell you about any topic, and I’ll provide details.
+
         """)
 
-
-    #top stories from google news
-    elif 'news for today' in command:
-        try:
-            news_url="https://news.google.com/news/rss"
-            Client=urlopen(news_url)
-            xml_page=Client.read()
-            Client.close()
-            soup_page=soup(xml_page,"xml")
-            news_list=soup_page.findAll("item")
-            for news in news_list[:15]:
-                RobinRensponse(news.title.text.encode('utf-8'))
-        except Exception as e:
-                print(e)
-
-    #current weather
     elif 'current weather' in command:
         reg_ex = re.search('current weather in (.*)', command)
         if reg_ex:
@@ -133,39 +108,42 @@ def assistant(command):
             w = obs.get_weather()
             k = w.get_status()
             x = w.get_temperature(unit='celsius')
-            RobinRensponse('Current weather in %s is %s. The maximum temperature is %0.2f and the minimum temperature is %0.2f degree celcius' % (city, k, x['temp_max'], x['temp_min']))
+            robinreply('Current weather in %s is %s. The maximum temperature is %0.2f and the minimum temperature is %0.2f degree celcius' % (city, k, x['temp_max'], x['temp_min']))
 
-
-
-    #time
     elif 'time' in command:
         import datetime
         now = datetime.datetime.now()
-        RobinRensponse('Current time is %d hours %d minutes' % (now.hour, now.minute))
+        robinreply('Current time is %d hours %d minutes' % (now.hour, now.minute))
 
+    elif 'news for today' in command:
+        try:
+            news_url="https://news.google.com/news/rss"
+            Client=urlopen(news_url)
+            xml_page=Client.read()
+            Client.close()
+            soup_page=soup(xml_page,"xml")
+            news_list=soup_page.findAll("item")
+            for news in news_list[:15]:
+                robinreply(news.title.text.encode('utf-8'))
+        except Exception as e:
+                print(e)
 
-
-
-    #send email
     elif 'email' in command:
-        RobinRensponse('Who is the recipient?')
-        recipient = myCommand()
+        robinreply('Who is the recipient?')
+        recipient = usercom()
         if 'david' in recipient:
-            RobinRensponse('What should I say to him?')
-            content = myCommand()
+            robinreply('What should I say to him?')
+            content = usercom()
             mail = smtplib.SMTP('smtp.gmail.com', 587)
             mail.ehlo()
             mail.starttls()
             mail.login('nageshsinghc@gmail.com', '*************')
             mail.sendmail('nageshsingh4@gmail.com', 'amdp.hauhan@gmail.com', content)
             mail.close()
-            RobinRensponse('Email has been sent successfuly. You can check your inbox.')
+            robinreply('Email has been sent successfuly. You can check your inbox.')
         else:
-            RobinRensponse('I don\'t know what you mean!')
+            robinreply('I don\'t know what you mean!')
 
-
-
-    #launch any application
     elif 'launch' in command:
         reg_ex = re.search('launch (.*)', command)
         if reg_ex:
@@ -173,14 +151,10 @@ def assistant(command):
             appname1 = appname+".app"
             subprocess.Popen(["open", "-n", "/Applications/" + appname1], stdout=subprocess.PIPE)
 
-        RobinRensponse('I have launched the desired application')
+        robinreply('Launched!')
 
-
-
-
-    #play youtube song
     elif 'play me a song' in command:
-        path = '/Users/nageshsinghchauhan/Documents/videos/'
+        path = '/Users/NAME_HERE/Documents/videos/'
         folder = path
         for the_file in os.listdir(folder):
             file_path = os.path.join(folder, the_file)
@@ -190,9 +164,8 @@ def assistant(command):
             except Exception as e:
                 print(e)
 
-
-        RobinRensponse('What song shall I play Sir?')
-        mysong = myCommand()
+        robinreply('What song shall I play Sir?')
+        mysong = usercom()
         if mysong:
             flag = 0
             url = "https://www.youtube.com/results?search_query=" + mysong.replace(' ', '+')
@@ -219,12 +192,10 @@ def assistant(command):
             vlc.play(path)
 
             if flag == 0:
-                RobinRensponse('I have not found anything in Youtube ')
+                robinreply('I have not found anything in Youtube ')
 
-
-    #change wallpaper
     elif 'change wallpaper' in command:
-        folder = '/Users/nageshsinghchauhan/Documents/wallpaper/'
+        folder = '/Users/USER_NAME_HERE/Documents/wallpaper/'
         for the_file in os.listdir(folder):
             file_path = os.path.join(folder, the_file)
             try:
@@ -234,16 +205,15 @@ def assistant(command):
                 print(e)
 
         api_key = '***************'
-        url = 'https://api.unsplash.com/photos/random?client_id=' + api_key #pic from unspalsh.com
+        url = 'https://api.unsplash.com/photos/random?client_id=' + api_key 
         f = urllib2.urlopen(url)
         json_string = f.read()
         f.close()
         parsed_json = json.loads(json_string)
         photo = parsed_json['urls']['full']
-        urllib.urlretrieve(photo, "/Users/nageshsinghchauhan/Documents/wallpaper/a") # Location where we download the image to.
+        urllib.urlretrieve(photo, "/Users/USER_NAME_HERE/Documents/wallpaper/a") # Location where we download the image to.
         subprocess.call(["killall Dock"], shell=True)
-        RobinRensponse('wallpaper changed successfully')
-
+        robinreply('wallpaper changed successfully')
 
     #ask me anything
     elif 'tell me about' in command:
@@ -252,13 +222,12 @@ def assistant(command):
             if reg_ex:
                 topic = reg_ex.group(1)
                 ny = wikipedia.page(topic)
-                RobinRensponse(ny.content[:500].encode('utf-8'))
+                robinreply(ny.content[:500].encode('utf-8'))
         except Exception as e:
                 print(e)
-                RobinRensponse(e)
+                robinreply(e)
 
-RobinRensponse('Hi User, I am Robin and I am your personal voice assistant, Please give a command or say "help me" and I will tell you what all I can do for you.')
+robinreply('Hi User, I am Robin and I am your personal voice assistant, Please give a command or say "help me" and I will tell you what all I can do for you.')
 
-#loop to continue executing multiple commands
 while True:
-    assistant(myCommand())
+    robin_start(usercom())
