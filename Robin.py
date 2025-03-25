@@ -3,7 +3,7 @@ from pyowm import OWM
 import youtube_dl
 import vlc
 import urllib
-import urllib2
+import urllib.request as urllib2
 import json
 import os
 import sys
@@ -15,219 +15,210 @@ import smtplib
 import requests
 import subprocess
 from bs4 import BeautifulSoup as soup
-from urllib2 import urlopen
+from urllib.request import urlopen
 from time import strftime
+import datetime
 
 
-def robinreply(audio):
-    "speaks audio passed as argument"
-    print(audio)
-    for line in audio.splitlines():
-        os.system("say " + audio)
+class RobinAssistant:
+    def __init__(self):
+        self.recognizer = sr.Recognizer()
+        self.weather_api_key = "*****************"
+        self.news_url = "https://news.google.com/news/rss"
+        self.wallpaper_api_key = "***************"
 
-def usercom():
-    "listens for commands"
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print('Say something...')
-        r.pause_threshold = 1
-        r.adjust_for_ambient_noise(source, duration=1)
-        audio = r.listen(source)
-    try:
-        command = r.recognize_google(audio).lower()
-        print('You said: ' + command + '\n')
-    #loop back to continue to listen for commands if unrecognizable speech is received
-    except sr.UnknownValueError:
-        print('....')
-        command = usercom();
-    return command
+    def speak(self, text):
+        """Outputs the given text as speech."""
+        print(text)
+        os.system("say " + text)
 
-def robin_start(command):
-    "if statements for executing commands"
+    def listen(self):
+        """Listens for user commands and returns the recognized text."""
+        with sr.Microphone() as source:
+            print("Say something...")
+            self.recognizer.pause_threshold = 1
+            self.recognizer.adjust_for_ambient_noise(source, duration=1)
+            audio = self.recognizer.listen(source)
 
-    #open subreddit Reddit
-    if 'open reddit' in command:
-        reg_ex = re.search('open reddit (.*)', command)
-        url = 'https://www.reddit.com/'
+        try:
+            command = self.recognizer.recognize_google(audio).lower()
+            print(f"You said: {command}")
+            return command
+        except sr.UnknownValueError:
+            print("....")
+            return self.listen()
+
+    def open_reddit(self, command):
+        """Opens Reddit based on user request."""
+        reg_ex = re.search(r'open reddit (.*)', command)
+        url = "https://www.reddit.com/"
         if reg_ex:
             subreddit = reg_ex.group(1)
-            url = url + 'r/' + subreddit
+            url = url + "r/" + subreddit
         webbrowser.open(url)
-        robinreply('The Reddit content has been opened for you Sir.')
+        self.speak("The Reddit content has been opened for you Sir.")
 
-    elif 'shutdown' in command:
-        robinreply('Bye bye Sir. Have a nice day')
-        sys.exit()
-
-    #open website
-    elif 'open' in command:
-        reg_ex = re.search('open (.+)', command)
+    def open_website(self, command):
+        """Opens a website requested by the user."""
+        reg_ex = re.search(r'open (.+)', command)
         if reg_ex:
             domain = reg_ex.group(1)
-            print(domain)
-            url = 'https://www.' + domain
+            url = f"https://www.{domain}"
             webbrowser.open(url)
-            robinreply('The website you have requested has been opened for you Sir.')
-        else:
-            pass
+            self.speak("The website you requested has been opened.")
 
-    elif 'hello' in command:
-        day_time = int(strftime('%H'))
+    def greet(self):
+        """Greets the user based on the time of day."""
+        day_time = int(strftime("%H"))
         if day_time < 12:
-            robinreply('Hello Sir. Good morning')
+            self.speak("Hello Sir. Good morning.")
         elif 12 <= day_time < 18:
-            robinreply('Hello Sir. Good afternoon')
+            self.speak("Hello Sir. Good afternoon.")
         else:
-            robinreply('Hello Sir. Good evening')
+            self.speak("Hello Sir. Good evening.")
 
-    elif 'help me' in command:
-        robinreply("""
-        Here’s what I can help you with:
-
-        1. Browse a Reddit subreddit: Simply name the subreddit, and I’ll open it in your browser.
-        2. Visit a website (e.g., open xyz.com): Replace 'xyz' with the site you want to visit.
-        3. Send an email: I’ll ask for the recipient and message details step-by-step.
-        4. Want a joke? Say "Tell a joke" or "another joke," and I’ll give you a dad joke.
-        5. Get the weather forecast in {city name}: I’ll update you with the current weather and temperature for your city.
-        6. Say hello, and I’ll greet you depending on the time of day.
-        7. Play a song: I can play your requested video or song on VLC.
-        8. Update your wallpaper: Let me change your desktop wallpaper for you.
-        9. Today’s news: I’ll read out the latest headlines.
-        10. Check the time: I’ll tell you the current time from your system.
-        11. Top Google news stories: I’ll bring you the latest top stories from Google News.
-        12. Learn about something: Ask me to tell you about any topic, and I’ll provide details.
-
-        """)
-
-    elif 'current weather' in command:
-        reg_ex = re.search('current weather in (.*)', command)
+    def fetch_weather(self, command):
+        """Fetches the current weather for a specified city."""
+        reg_ex = re.search("current weather in (.*)", command)
         if reg_ex:
             city = reg_ex.group(1)
-            owm = OWM(API_key='*****************')
+            owm = OWM(API_key=self.weather_api_key)
             obs = owm.weather_at_place(city)
             w = obs.get_weather()
             k = w.get_status()
-            x = w.get_temperature(unit='celsius')
-            robinreply('Current weather in %s is %s. The maximum temperature is %0.2f and the minimum temperature is %0.2f degree celcius' % (city, k, x['temp_max'], x['temp_min']))
+            x = w.get_temperature(unit="celsius")
+            self.speak(
+                f"Current weather in {city} is {k}. The maximum temperature is {x['temp_max']:.2f} and the minimum temperature is {x['temp_min']:.2f} degrees Celsius."
+            )
 
-    elif 'time' in command:
-        import datetime
+    def tell_time(self):
+        """Tells the current time."""
         now = datetime.datetime.now()
-        robinreply('Current time is %d hours %d minutes' % (now.hour, now.minute))
+        self.speak(f"Current time is {now.hour} hours {now.minute} minutes.")
 
-    elif 'news for today' in command:
+    def fetch_news(self):
+        """Fetches top news headlines."""
         try:
-            news_url="https://news.google.com/news/rss"
-            Client=urlopen(news_url)
-            xml_page=Client.read()
-            Client.close()
-            soup_page=soup(xml_page,"xml")
-            news_list=soup_page.findAll("item")
+            client = urlopen(self.news_url)
+            xml_page = client.read()
+            client.close()
+            soup_page = soup(xml_page, "xml")
+            news_list = soup_page.findAll("item")
             for news in news_list[:15]:
-                robinreply(news.title.text.encode('utf-8'))
+                self.speak(news.title.text)
         except Exception as e:
-                print(e)
+            print(e)
 
-    elif 'email' in command:
-        robinreply('Who is the recipient?')
-        recipient = usercom()
-        if 'david' in recipient:
-            robinreply('What should I say to him?')
-            content = usercom()
-            mail = smtplib.SMTP('smtp.gmail.com', 587)
+    def send_email(self):
+        """Sends an email to a specified recipient."""
+        self.speak("Who is the recipient?")
+        recipient = self.listen()
+        if "david" in recipient:
+            self.speak("What should I say to him?")
+            content = self.listen()
+            mail = smtplib.SMTP("smtp.gmail.com", 587)
             mail.ehlo()
             mail.starttls()
-            mail.login('nageshsinghc@gmail.com', '*************')
-            mail.sendmail('nageshsingh4@gmail.com', 'amdp.hauhan@gmail.com', content)
+            mail.login("your_email@gmail.com", "your_password")
+            mail.sendmail("your_email@gmail.com", "recipient_email@gmail.com", content)
             mail.close()
-            robinreply('Email has been sent successfuly. You can check your inbox.')
+            self.speak("Email has been sent successfully.")
         else:
-            robinreply('I don\'t know what you mean!')
+            self.speak("I don't know what you mean!")
 
-    elif 'launch' in command:
-        reg_ex = re.search('launch (.*)', command)
+    def launch_application(self, command):
+        """Launches an application."""
+        reg_ex = re.search("launch (.*)", command)
         if reg_ex:
             appname = reg_ex.group(1)
-            appname1 = appname+".app"
+            appname1 = appname + ".app"
             subprocess.Popen(["open", "-n", "/Applications/" + appname1], stdout=subprocess.PIPE)
+            self.speak("Launched!")
 
-        robinreply('Launched!')
-
-    elif 'play me a song' in command:
-        path = '/Users/NAME_HERE/Documents/videos/'
-        folder = path
-        for the_file in os.listdir(folder):
-            file_path = os.path.join(folder, the_file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                print(e)
-
-        robinreply('What song shall I play Sir?')
-        mysong = usercom()
+    def play_song(self):
+        """Plays a requested song from YouTube."""
+        self.speak("What song shall I play Sir?")
+        mysong = self.listen()
         if mysong:
-            flag = 0
-            url = "https://www.youtube.com/results?search_query=" + mysong.replace(' ', '+')
+            url = "https://www.youtube.com/results?search_query=" + mysong.replace(" ", "+")
             response = urllib2.urlopen(url)
             html = response.read()
-            soup1 = soup(html,"lxml")
-            url_list = []
+            soup1 = soup(html, "lxml")
+            url_list = [
+                "https://www.youtube.com" + vid["href"]
+                for vid in soup1.findAll(attrs={"class": "yt-uix-tile-link"})
+                if ("https://www.youtube.com" + vid["href"]).startswith("https://www.youtube.com/watch?v=")
+            ]
+            if url_list:
+                final_url = url_list[0]
+                ydl_opts = {}
+                os.chdir("/Users/NAME_HERE/Documents/videos/")
+                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([final_url])
+                vlc.play("/Users/NAME_HERE/Documents/videos/")
+            else:
+                self.speak("I couldn't find anything on YouTube.")
 
-
-            for vid in soup1.findAll(attrs={'class':'yt-uix-tile-link'}):
-                if ('https://www.youtube.com' + vid['href']).startswith("https://www.youtube.com/watch?v="):
-                    flag = 1
-                    final_url = 'https://www.youtube.com' + vid['href']
-                    url_list.append(final_url)
-
-
-            url = url_list[0]
-            ydl_opts = {}
-
-
-            os.chdir(path)
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-            vlc.play(path)
-
-            if flag == 0:
-                robinreply('I have not found anything in Youtube ')
-
-    elif 'change wallpaper' in command:
-        folder = '/Users/USER_NAME_HERE/Documents/wallpaper/'
-        for the_file in os.listdir(folder):
-            file_path = os.path.join(folder, the_file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                print(e)
-
-        api_key = '***************'
-        url = 'https://api.unsplash.com/photos/random?client_id=' + api_key 
-        f = urllib2.urlopen(url)
-        json_string = f.read()
-        f.close()
-        parsed_json = json.loads(json_string)
-        photo = parsed_json['urls']['full']
-        urllib.urlretrieve(photo, "/Users/USER_NAME_HERE/Documents/wallpaper/a") # Location where we download the image to.
+    def change_wallpaper(self):
+        """Changes the desktop wallpaper using an image from Unsplash."""
+        url = f"https://api.unsplash.com/photos/random?client_id={self.wallpaper_api_key}"
+        response = urllib2.urlopen(url)
+        json_data = json.loads(response.read())
+        photo_url = json_data["urls"]["full"]
+        wallpaper_path = "/Users/USER_NAME_HERE/Documents/wallpaper/a"
+        urllib.urlretrieve(photo_url, wallpaper_path)
         subprocess.call(["killall Dock"], shell=True)
-        robinreply('wallpaper changed successfully')
+        self.speak("Wallpaper changed successfully.")
 
-    #ask me anything
-    elif 'tell me about' in command:
-        reg_ex = re.search('tell me about (.*)', command)
-        try:
-            if reg_ex:
-                topic = reg_ex.group(1)
-                ny = wikipedia.page(topic)
-                robinreply(ny.content[:500].encode('utf-8'))
-        except Exception as e:
-                print(e)
-                robinreply(e)
+    def search_wikipedia(self, command):
+        """Fetches Wikipedia information based on user query."""
+        reg_ex = re.search("tell me about (.*)", command)
+        if reg_ex:
+            topic = reg_ex.group(1)
+            try:
+                summary = wikipedia.summary(topic, sentences=2)
+                self.speak(summary)
+            except wikipedia.exceptions.DisambiguationError:
+                self.speak("There are multiple results. Please be more specific.")
+            except wikipedia.exceptions.PageError:
+                self.speak("Sorry, I couldn't find information on that.")
 
-robinreply('Hi User, I am Robin and I am your personal voice assistant, Please give a command or say "help me" and I will tell you what all I can do for you.')
+    def execute_command(self, command):
+        """Executes a user command."""
+        if "open reddit" in command:
+            self.open_reddit(command)
+        elif "shutdown" in command:
+            self.speak("Bye bye Sir. Have a nice day")
+            sys.exit()
+        elif "open" in command:
+            self.open_website(command)
+        elif "hello" in command:
+            self.greet()
+        elif "current weather" in command:
+            self.fetch_weather(command)
+        elif "time" in command:
+            self.tell_time()
+        elif "news for today" in command:
+            self.fetch_news()
+        elif "email" in command:
+            self.send_email()
+        elif "launch" in command:
+            self.launch_application(command)
+        elif "play me a song" in command:
+            self.play_song()
+        elif "change wallpaper" in command:
+            self.change_wallpaper()
+        elif "tell me about" in command:
+            self.search_wikipedia(command)
 
-while True:
-    robin_start(usercom())
+    def start(self):
+        """Starts the assistant."""
+        self.speak("Hello, I am Robin, your assistant. How can I help you?")
+        while True:
+            command = self.listen()
+            self.execute_command(command)
+
+
+# Initialize and start Robin Assistant
+assistant = RobinAssistant()
+assistant.start()
